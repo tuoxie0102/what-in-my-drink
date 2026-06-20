@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>不要老是喝奶茶：的奶茶店</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/RonenNess/RPGUI/dist/rpgui.min.css">
+<link rel="stylesheet" href="https://unpkg.com/xp.css">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="app">
+  <div id="memory-particles" aria-hidden="true"></div>
+
+  <section id="page-shop" class="page active" aria-label="像素奶茶店">
+    <div class="shop-scene">
+      <img class="shop-bg" src="assets/image/shop/shop-bg.png" alt="奶茶店">
+      <div class="shop-actions">
+        <button class="plain-tool" id="btn-refresh-drinks" type="button">刷新</button>
+        <button class="plain-tool" id="btn-collection" type="button">失物招领柜</button>
+        <button class="plain-tool" id="btn-easter" type="button">旧电脑</button>
+      </div>
+      <button class="clerk-container" id="clerk-container" type="button" aria-label="和店员说话">
+        <img class="clerk-img" id="clerk-img" src="assets/image/clerk/clerk-default.png" alt="店员">
+      </button>
+      <div class="coffee-dialog" id="shop-dialog">
+        <div class="dialog-name">店员</div>
+        <div class="dialog-line" id="clerk-speech"></div>
+        <div class="dialog-hint" aria-hidden="true"></div>
+      </div>
+      <div class="home-milk-menu" aria-label="今日三杯奶茶">
+        <div class="home-menu-copy">
+          <strong>选一杯</strong>
+        </div>
+        <div class="drinks-grid home-drinks-grid" id="home-drinks-grid"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="page-menu" class="page" aria-label="今日奶茶菜单">
+    <div class="rpgui-container framed-golden milk-menu-panel">
+      <div class="menu-title">今日三杯奶茶</div>
+      <div class="menu-subtitle" id="menu-subtitle"></div>
+      <div class="drinks-grid" id="drinks-grid"></div>
+      <button class="rpgui-button menu-back" id="menu-back" type="button"><span>回店里</span></button>
+    </div>
+  </section>
+
+  <div id="overlay-confirm" aria-hidden="true">
+    <div class="rpgui-container framed confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="confirm-text">
+      <img class="confirm-clerk" src="assets/image/clerk/clerk-reading.png" alt="">
+      <div class="confirm-text" id="confirm-text"></div>
+      <div class="confirm-buttons">
+        <button class="rpgui-button" id="btn-confirm-no" type="button"><span>还是算了</span></button>
+        <button class="rpgui-button" id="btn-confirm-yes" type="button"><span>就选这杯</span></button>
+      </div>
+    </div>
+  </div>
+
+  <section id="page-shake" class="page" aria-label="喝奶茶">
+    <div class="shake-instruction" id="drink-instruction">点击奶茶杯喝一口</div>
+    <button class="shake-button drink-cup-button" id="shake-button" type="button" aria-label="喝一口奶茶">
+      <span class="drink-liquid" id="drink-liquid"></span>
+      <img class="cup-shake" id="cup-shake-img" src="" alt="奶茶杯">
+      <span class="cup-found-item" id="cup-found-item" aria-hidden="true"></span>
+    </button>
+    <div class="shake-counter" id="shake-counter"></div>
+    <div class="drink-clerk-line" id="drink-clerk-line"></div>
+    <button class="primary-action drink-found-cta" id="btn-drink-found" type="button">看看是什么</button>
+  </section>
+
+  <section id="page-reveal" class="page" aria-label="遗失物出现">
+    <div class="reveal-stage">
+      <div class="reveal-clerk-line" id="reveal-clerk-line"></div>
+      <div class="falling-item" id="falling-item">
+        <img id="reveal-item-img" src="" alt="">
+      </div>
+      <div class="reveal-item-name" id="reveal-item-name"></div>
+      <button class="primary-action" id="btn-reveal-cta" type="button">查看遗失物</button>
+    </div>
+  </section>
+
+  <section id="page-card" class="page" aria-label="遗失物展览馆">
+    <div class="archive-shell" id="card-wrapper"></div>
+  </section>
+
+  <section id="page-collection" class="page" aria-label="失物招领柜">
+    <div class="collection-shell">
+      <header class="collection-header">
+        <div>
+          <p class="section-kicker">像素风收藏册</p>
+          <h1>失物招领柜</h1>
+        </div>
+        <button class="plain-tool" id="collection-back" type="button">回奶茶店</button>
+      </header>
+      <nav class="collection-tabs" id="collection-tabs" aria-label="分类"></nav>
+      <div class="collection-grid" id="collection-grid"></div>
+    </div>
+  </section>
+
+  <section id="page-easter" class="page xp-surface" aria-label="千禧年彩蛋">
+    <div class="window xp-window">
+      <div class="title-bar">
+        <div class="title-bar-text">C:\MEMORY\MILKTEA.EXE</div>
+        <div class="title-bar-controls">
+          <button aria-label="Minimize"></button>
+          <button aria-label="Maximize"></button>
+          <button aria-label="Close" id="xp-close"></button>
+        </div>
+      </div>
+      <div class="window-body">
+        <p>系统提示：检测到一份未保存的 2006 年夏天。</p>
+        <p>建议操作：回奶茶店，把它装进失物招领柜。</p>
+        <button id="xp-return" type="button">确定</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script src="js/data.js"></script>
+<script src="https://unpkg.com/page-flip/dist/js/page-flip.browser.js"></script>
+<script>
+var COLLECTION_KEY = 'milkTeaLostObjects.v1';
+var PURCHASE_DATE_KEY = 'milkTeaPurchaseDate.v1';
+var PURCHASE_COUNT_KEY = 'milkTeaPurchaseCount.v1';
+var PURCHASED_DRINKS_KEY = 'milkTeaPurchasedDrinkIds.v1';
+var DAILY_DRINKS_DATE_KEY = 'milkTeaDailyDrinksDate.v1';
+var DAILY_DRINKS_KEY = 'milkTeaDailyDrinks.v1';
+var DAILY_LIMIT = 3;
+var CATEGORIES = ['校园', '网吧', '家庭', '城市', '互联网', '音乐'];
+var state = {
+  clerkPose: 'default',
+  todayDrinks: [],
+  selectedMilkTea: null,
+  selectedDrink: null,
+  resultCard: null,
+  revealedCard: null,
+  revealedCardImage: '',
+  currentStep: 'home',
+  isShaking: false,
+  shakeCount: 0,
+  shakeTimer: null,
+  drinkSips: 0,
+  drinkSipsNeeded: 4,
+  foundItemReady: false,
+  collectionFilter: '校园',
+  typeTimer: null,
+  confirmMode: null,
+  purchaseCount: 0,
+  purchasedDrinkIds: []
+};
+
+function rand(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+function shortText(text, limit) { return text && text.length > limit ? text.slice(0, limit - 1) + '…' : (text || ''); }
+function escapeHtml(text) {
+  return String(text || '').replace(/[&<>"']/g, function(ch) {
+    return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch];
+  });
+}
+
+function typeLine(el, text) {
+  clearInterval(state.typeTimer);
+  el.textContent = '';
+  var i = 0;
+  state.typeTimer = setInterval(function() {
+    el.textContent = text.slice(0, i + 1);
+    i++;
+    if (i >= text.length) clearInterval(state.typeTimer);
+  }, 28);
+}
+
+function showPage(pageId) {
+  document.querySelectorAll('.page').forEach(function(page) { page.classList.remove('active'); });
+  var page = document.getElementById(pageId);
+  if (page) page.classList.add('active');
+  state.currentStep = pageId === 'page-shop' ? 'home' :
+    pageId === 'page-shake' ? state.currentStep :
+    pageId === 'page-reveal' ? 'foundItem' :
+    pageId === 'page-card' ? 'archiveDetail' :
+    pageId === 'page-collection' ? 'collection' :
+    pageId === 'page-menu' ? 'select' : state.currentStep;
+  window.scrollTo(0, 0);
+}
+
+function getCupImage(drinkKey, isSpecial) {
+  if (isSpecial) return 'assets/image/cups/cup-special.png';
+  return DRINKS[drinkKey].category === '旧时代系列' ? 'assets/image/cups/cup-pearl.png' : 'assets/image/cups/cup-ice-tea.png';
+}
+
+function getCardImgPath(cardId) {
+  return 'assets/image/cards/' + cardId.replace('#', '%23') + '.png';
+}
+
+function getLocalDateKey() {
+  var now = new Date();
+  var month = String(now.getMonth() + 1).padStart(2, '0');
+  var day = String(now.getDate()).padStart(2, '0');
+  return now.getFullYear() + '-' + month + '-' + day;
+}
+
+function readJSON(key, fallback) {
+  try {
+    var value = localStorage.getItem(key);
+    return value ? JSON.parse(value) : fallback;
+  } catch (err) {
+    return fallback;
+  }
+}
+
+function syncPurchaseState() {
+  var today = getLocalDateKey();
+  if (localStorage.getItem(PURCHASE_DATE_KEY) !== today) {
+    localStorage.setItem(PURCHASE_DATE_KEY, today);
+    localStorage.setItem(PURCHASE_COUNT_KEY, '0');
+    localStorage.setItem(PURCHASED_DRINKS_KEY, JSON.stringify([]));
+  }
+  state.purchaseCount = parseInt(localStorage.getItem(PURCHASE_COUNT_KEY) || '0', 10);
+  if (Number.isNaN(state.purchaseCount)) state.purchaseCount = 0;
+  state.purchasedDrinkIds = readJSON(PURCHASED_DRINKS_KEY, []);
+  if (!Array.isArray(state.purchasedDrinkIds)) state.purchasedDrinkIds = [];
+}
+
+function hasReachedDailyLimit() {
+  syncPurchaseState();
+  return state.purchaseCount >= DAILY_LIMIT;
+}
+
+function isDrinkPurchased(drinkKey) {
+  syncPurchaseState();
+  return state.purchasedDrinkIds.indexOf(drinkKey) !== -1;
+}
+
+function recordPurchase(drinkKey) {
+  syncPurchaseState();
+  if (state.purchasedDrinkIds.indexOf(drinkKey) !== -1) return;
+  state.purchasedDrinkIds.push(drinkKey);
+  state.purchaseCount = Math.min(DAILY_LIMIT, state.purchaseCount + 1);
+  localStorage.setItem(PURCHASE_DATE_KEY, getLocalDateKey());
+  localStorage.setItem(PURCHASE_COUNT_KEY, String(state.purchaseCount));
+  localStorage.setItem(PURCHASED_DRINKS_KEY, JSON.stringify(state.purchasedDrinkIds));
+}
+
+function loadCollection() {
+  try { return JSON.parse(localStorage.getItem(COLLECTION_KEY) || '[]'); }
+  catch (err) { return []; }
+}
+
+function saveToCollection(cardId) {
+  var ids = loadCollection();
+  if (ids.indexOf(cardId) === -1) {
+    ids.push(cardId);
+    localStorage.setItem(COLLECTION_KEY, JSON.stringify(ids));
+  }
+}
+
+function inferCategory(card) {
+  var text = [card.name, card.location, card.itemDescription, card.background].join(' ');
+  if (/网吧|QQ|论坛|贴吧|游戏|电脑/.test(text)) return '网吧';
+  if (/家|父|母|妈妈|爸爸|客厅|厨房/.test(text)) return '家庭';
+  if (/车站|广州|城市|城中村|CBD|街|公交/.test(text)) return '城市';
+  if (/互联网|网站|空间|博客|邮箱|网名/.test(text)) return '互联网';
+  if (/歌词|磁带|MP3|随身听|歌|周杰伦|彩铃/.test(text)) return '音乐';
+  return '校园';
+}
+
+function triggerParticles() {
+  var root = document.getElementById('memory-particles');
+  root.innerHTML = '';
+  for (var i = 0; i < 16; i++) {
+    var dot = document.createElement('span');
+    dot.style.left = randInt(8, 92) + '%';
+    dot.style.animationDelay = randInt(0, 300) + 'ms';
+    dot.style.animationDuration = randInt(520, 780) + 'ms';
+    root.appendChild(dot);
+  }
+  root.classList.add('active');
+  setTimeout(function() { root.classList.remove('active'); }, 820);
+}
+
+function generateDailyDrinks() {
+  syncPurchaseState();
+  var today = getLocalDateKey();
+  var storedDate = localStorage.getItem(DAILY_DRINKS_DATE_KEY);
+  var storedDrinks = readJSON(DAILY_DRINKS_KEY, null);
+  if (storedDate === today && Array.isArray(storedDrinks) && storedDrinks.length === 3) {
+    state.todayDrinks = storedDrinks;
+    return;
+  }
+  var oldEra = Object.keys(DRINKS).filter(function(k) { return DRINKS[k].category === '旧时代系列'; });
+  var city = Object.keys(DRINKS).filter(function(k) { return DRINKS[k].category === '城市系列'; });
+  var modern = Object.keys(DRINKS).filter(function(k) { return DRINKS[k].category === '今日特调'; });
+  var picks = [
+    { drinkKey: rand(oldEra), isSpecial: false },
+    { drinkKey: rand(city), isSpecial: false },
+    { drinkKey: rand(modern), isSpecial: false }
+  ];
+  picks[randInt(0, 2)].isSpecial = true;
+  state.todayDrinks = picks;
+  localStorage.setItem(DAILY_DRINKS_DATE_KEY, today);
+  localStorage.setItem(DAILY_DRINKS_KEY, JSON.stringify(picks));
+}
+
+function regenerateDailyDrinks() {
+  var oldEra = Object.keys(DRINKS).filter(function(k) { return DRINKS[k].category === '旧时代系列'; });
+  var city = Object.keys(DRINKS).filter(function(k) { return DRINKS[k].category === '城市系列'; });
+  var modern = Object.keys(DRINKS).filter(function(k) { return DRINKS[k].category === '今日特调'; });
+  var picks = [
+    { drinkKey: rand(oldEra), isSpecial: false },
+    { drinkKey: rand(city), isSpecial: false },
+    { drinkKey: rand(modern), isSpecial: false }
+  ];
+  picks[randInt(0, 2)].isSpecial = true;
+  state.todayDrinks = picks;
+  localStorage.setItem(DAILY_DRINKS_DATE_KEY, getLocalDateKey());
+  localStorage.setItem(DAILY_DRINKS_KEY, JSON.stringify(picks));
+}
+
+function initShop() {
+  syncPurchaseState();
+  state.selectedMilkTea = null;
+  state.selectedDrink = null;
+  state.resultCard = null;
+  state.revealedCard = null;
+  state.revealedCardImage = '';
+  state.currentStep = 'home';
+  state.drinkSips = 0;
+  state.foundItemReady = false;
+  var poses = ['default', 'cooking', 'reading', 'sleeping'];
+  state.clerkPose = rand(poses);
+  var img = document.getElementById('clerk-img');
+  img.src = 'assets/image/clerk/clerk-' + state.clerkPose + '.png';
+  img.onerror = function() { this.src = 'assets/image/clerk/clerk-default.png'; };
+  generateDailyDrinks();
+  renderMilkTeaOptions(document.getElementById('home-drinks-grid'), 'home');
+  if (hasReachedDailyLimit()) {
+    typeLine(document.getElementById('clerk-speech'), '「今天已经累了，不会再摇了」');
+  } else {
+    typeLine(document.getElementById('clerk-speech'), '「' + rand(CLERK_LINES.opening) + '」');
+  }
+  showPage('page-shop');
+}
+
+function renderMilkTeaOptions(grid, surface) {
+  syncPurchaseState();
+  grid.innerHTML = '';
+  state.todayDrinks.forEach(function(item, idx) {
+    var drink = DRINKS[item.drinkKey];
+    var soldOut = hasReachedDailyLimit();
+    var purchased = isDrinkPurchased(item.drinkKey);
+    var disabled = soldOut || purchased;
+    var card = document.createElement('button');
+    card.type = 'button';
+    card.className = 'drink-card' + (item.isSpecial ? ' special' : '') + (disabled ? ' unavailable' : '');
+    card.disabled = disabled;
+    card.setAttribute('aria-label', '选择' + drink.display);
+    var priceText = item.isSpecial ? '特惠 2元' : drink.price + '元';
+    if (purchased) priceText = '已选过';
+    if (soldOut) priceText = '今日售罄';
+    var entryText = idx === 0 ? '校园回声' : idx === 1 ? '城市回声' : '今日特调';
+    card.innerHTML =
+      (item.isSpecial ? '<span class="special-badge">特惠</span>' : '') +
+      '<span class="entry-type">' + entryText + '</span>' +
+      '<img class="cup-icon" src="' + getCupImage(item.drinkKey, item.isSpecial) + '" alt="">' +
+      '<span class="drink-name">' + escapeHtml(drink.display) + '</span>' +
+      '<span class="drink-era">' + escapeHtml(drink.era) + '</span>' +
+      '<span class="drink-price">' + priceText + '</span>';
+    card.addEventListener('click', function() {
+      if (disabled) {
+        showSoldOutLine();
+        return;
+      }
+      selectDrink(idx);
+    });
+    grid.appendChild(card);
+  });
+}
+
+function showSoldOutLine() {
+  var pool = ['今天已经累了，不会再摇了']
+    .concat(CLERK_LINES.soldOut || [])
+    .concat(CLERK_LINES.idle || [])
+    .concat(CLERK_LINES.helpRequest || []);
+  typeLine(document.getElementById('clerk-speech'), '「' + rand(pool) + '」');
+}
+
+function setSpecialConfirmButtons() {
+  document.querySelector('#btn-confirm-no span').textContent = '还是算了';
+  document.querySelector('#btn-confirm-yes span').textContent = '就选这杯';
+}
+
+function openRefreshConfirm() {
+  state.confirmMode = 'refreshConfirm';
+  state.currentStep = 'refreshConfirm';
+  document.getElementById('confirm-text').textContent = '「你今天的糖分摄入已经超标了，你真的要再喝吗？」';
+  document.querySelector('#btn-confirm-no span').textContent = '不要';
+  document.querySelector('#btn-confirm-yes span').textContent = '真的不要';
+  document.getElementById('overlay-confirm').classList.add('active');
+  document.getElementById('overlay-confirm').setAttribute('aria-hidden', 'false');
+}
+
+function continueRefreshComment() {
+  state.confirmMode = 'refreshClerkComment';
+  state.currentStep = 'refreshClerkComment';
+  document.getElementById('confirm-text').textContent = '「反正都是植脂末，便宜，你喝吧。」';
+  document.querySelector('#btn-confirm-no span').textContent = '好吧';
+  document.querySelector('#btn-confirm-yes span').textContent = '行吧';
+}
+
+function finishRefreshDrinks() {
+  state.confirmMode = null;
+  document.getElementById('overlay-confirm').classList.remove('active');
+  document.getElementById('overlay-confirm').setAttribute('aria-hidden', 'true');
+  state.purchaseCount = 0;
+  state.purchasedDrinkIds = [];
+  localStorage.setItem(PURCHASE_DATE_KEY, getLocalDateKey());
+  localStorage.setItem(PURCHASE_COUNT_KEY, '0');
+  localStorage.setItem(PURCHASED_DRINKS_KEY, JSON.stringify([]));
+  regenerateDailyDrinks();
+  state.selectedMilkTea = null;
+  state.selectedDrink = null;
+  state.resultCard = null;
+  state.revealedCard = null;
+  state.revealedCardImage = '';
+  state.currentStep = 'homeWithNewDrinks';
+  renderMilkTeaOptions(document.getElementById('home-drinks-grid'), 'home');
+  typeLine(document.getElementById('clerk-speech'), '「' + rand(CLERK_LINES.menu) + '」');
+  showPage('page-shop');
+  state.currentStep = 'homeWithNewDrinks';
+}
+
+function openMenu() {
+  document.getElementById('menu-subtitle').textContent = '「' + rand(CLERK_LINES.menu) + '」';
+  var grid = document.getElementById('drinks-grid');
+  renderMilkTeaOptions(grid, 'menu');
+  showPage('page-menu');
+}
+
+function selectDrink(idx) {
+  if (hasReachedDailyLimit()) {
+    showSoldOutLine();
+    return;
+  }
+  state.selectedMilkTea = state.todayDrinks[idx];
+  if (!state.selectedMilkTea || isDrinkPurchased(state.selectedMilkTea.drinkKey)) {
+    typeLine(document.getElementById('clerk-speech'), '「这杯已经选过了」');
+    return;
+  }
+  state.selectedDrink = state.selectedMilkTea;
+  state.resultCard = null;
+  state.revealedCard = null;
+  state.revealedCardImage = '';
+  if (state.selectedMilkTea.isSpecial) {
+    state.confirmMode = 'specialConfirm';
+    state.currentStep = 'confirm-special';
+    setSpecialConfirmButtons();
+    document.getElementById('confirm-text').textContent = '「' + rand(CLERK_LINES.specialConfirm) + '」';
+    document.getElementById('overlay-confirm').classList.add('active');
+    document.getElementById('overlay-confirm').setAttribute('aria-hidden', 'false');
+    return;
+  }
+  state.currentStep = 'drinking';
+  enterDrinkingForSelectedMilkTea();
+}
+
+function enterDrinkingForSelectedMilkTea() {
+  if (!state.selectedMilkTea) {
+    initShop();
+    return;
+  }
+  if (hasReachedDailyLimit() || isDrinkPurchased(state.selectedMilkTea.drinkKey)) {
+    initShop();
+    return;
+  }
+  recordPurchase(state.selectedMilkTea.drinkKey);
+  var drink = DRINKS[state.selectedMilkTea.drinkKey];
+  var cardId = rand(drink.cards);
+  state.resultCard = CARDS[cardId] || CARDS['#001'];
+  state.revealedCard = state.resultCard;
+  state.revealedCardImage = getCardImgPath(state.revealedCard.id);
+  startDrinkingStep();
+}
+
+function startDrinkingStep() {
+  var cupImg = document.getElementById('cup-shake-img');
+  var item = state.selectedMilkTea;
+  state.currentStep = 'drinking';
+  state.drinkSips = 0;
+  state.drinkSipsNeeded = randInt(3, 5);
+  state.foundItemReady = false;
+  cupImg.src = getCupImage(item.drinkKey, item.isSpecial);
+  cupImg.onerror = function() { this.src = 'assets/image/cups/cup-pearl.png'; };
+  document.getElementById('drink-liquid').style.height = '82%';
+  document.getElementById('cup-found-item').classList.remove('visible');
+  document.getElementById('cup-found-item').textContent = '';
+  document.getElementById('cup-found-item').style.backgroundImage = '';
+  document.getElementById('btn-drink-found').classList.remove('visible');
+  document.getElementById('drink-clerk-line').textContent = '';
+  document.getElementById('drink-instruction').textContent = '点击奶茶杯喝一口';
+  document.getElementById('shake-counter').textContent = '0 / ' + state.drinkSipsNeeded;
+  showPage('page-shake');
+}
+
+function drinkOneSip() {
+  if (state.currentStep === 'foundItem') return;
+  if (state.currentStep !== 'drinking' || !state.resultCard) return;
+  state.drinkSips++;
+  var remaining = Math.max(0, 82 - Math.round((state.drinkSips / state.drinkSipsNeeded) * 82));
+  document.getElementById('drink-liquid').style.height = remaining + '%';
+  document.getElementById('shake-counter').textContent = state.drinkSips + ' / ' + state.drinkSipsNeeded;
+  var lines = ['你喝了一口。', '味道有点奇怪。', '杯底好像有什么东西。'];
+  document.getElementById('drink-instruction').textContent = lines[Math.min(state.drinkSips - 1, lines.length - 1)];
+  if (state.drinkSips >= state.drinkSipsNeeded) {
+    revealFoundItemInCup();
+  }
+}
+
+function revealFoundItemInCup() {
+  state.currentStep = 'foundItem';
+  state.foundItemReady = true;
+  var found = document.getElementById('cup-found-item');
+  found.style.backgroundImage = 'url("' + state.revealedCardImage + '")';
+  found.textContent = state.revealedCard.id;
+  found.classList.add('visible');
+  document.getElementById('drink-instruction').textContent = '杯底好像卡着一个奇怪物品。';
+  document.getElementById('drink-clerk-line').textContent = '「不好意思，加多东西了。」';
+  document.getElementById('btn-drink-found').classList.add('visible');
+  triggerParticles();
+}
+
+function startShakeSequence() {
+  if (!state.selectedMilkTea) {
+    initShop();
+    return;
+  }
+  var cupImg = document.getElementById('cup-shake-img');
+  cupImg.src = getCupImage(state.selectedMilkTea.drinkKey, state.selectedMilkTea.isSpecial);
+  cupImg.onerror = function() { this.src = 'assets/image/cups/cup-pearl.png'; };
+  cupImg.classList.remove('shaking');
+  document.getElementById('shake-counter').textContent = '';
+  document.querySelector('.shake-instruction').textContent = '点击杯子开始摇奶茶';
+  state.shakeCount = 0;
+  state.isShaking = false;
+  if (state.shakeTimer) clearInterval(state.shakeTimer);
+  state.currentStep = 'shake';
+  showPage('page-shake');
+}
+
+function startShake() {
+  if (state.isShaking) return;
+  state.isShaking = true;
+  state.shakeCount = 0;
+  document.querySelector('.shake-instruction').textContent = '摇啊摇啊摇啊……';
+  document.getElementById('cup-shake-img').classList.add('shaking');
+  document.getElementById('shake-counter').textContent = '0 / 8';
+  state.shakeTimer = setInterval(function() {
+    state.shakeCount++;
+    document.getElementById('shake-counter').textContent = state.shakeCount + ' / 8';
+    if (state.shakeCount >= 8) {
+      clearInterval(state.shakeTimer);
+      finishShake();
+    }
+  }, 180);
+}
+
+function finishShake() {
+  state.isShaking = false;
+  document.getElementById('cup-shake-img').classList.remove('shaking');
+  if (!state.selectedMilkTea) {
+    initShop();
+    return;
+  }
+  var drink = DRINKS[state.selectedMilkTea.drinkKey];
+  var cardId = rand(drink.cards);
+  state.resultCard = CARDS[cardId] || CARDS['#001'];
+  state.revealedCard = state.resultCard;
+  state.revealedCardImage = getCardImgPath(state.revealedCard.id);
+  document.getElementById('reveal-clerk-line').textContent = '「' + rand(CLERK_LINES.itemFound) + '」';
+  document.getElementById('reveal-item-name').textContent = state.revealedCard.name;
+  var img = document.getElementById('reveal-item-img');
+  img.src = state.revealedCardImage;
+  img.onerror = function() { this.style.display = 'none'; };
+  triggerParticles();
+  state.currentStep = 'reveal';
+  showPage('page-reveal');
+}
+
+function showCard() {
+  if (!state.resultCard && !state.revealedCard) {
+    initShop();
+    return;
+  }
+  var card = state.resultCard || state.revealedCard;
+  var imgPath = state.revealedCardImage;
+  var testImg = new Image();
+  testImg.onload = function() { renderCard(card, imgPath, true); };
+  testImg.onerror = function() { renderCard(card, imgPath, false); };
+  testImg.src = imgPath;
+}
+
+function renderCard(card, imgPath, hasImage) {
+  var wrapper = document.getElementById('card-wrapper');
+  var category = inferCategory(card);
+  var desc = shortText(card.itemDescription, 50);
+  var fragmentText = [
+    card.backText ? '<p>' + escapeHtml(card.backText).replace(/\n/g, '<br>') + '</p>' : '',
+    card.background ? '<p><strong>档案背景</strong>' + escapeHtml(card.background) + '</p>' : '',
+    card.currentStatus ? '<p><strong>现状记录</strong>' + escapeHtml(card.currentStatus) + '</p>' : ''
+  ].join('');
+  var imageHTML = hasImage
+    ? '<img src="' + imgPath + '" alt="' + escapeHtml(card.name) + '">'
+    : '<div class="no-image">影像待补</div>';
+  wrapper.innerHTML =
+    '<article class="museum-card">' +
+      '<header class="exhibit-header">' +
+        '<p class="section-kicker">档案馆藏品卡 · ' + escapeHtml(card.id) + ' / ' + category + '</p>' +
+        '<h1>' + escapeHtml(card.name) + '</h1>' +
+        '<p class="time-place">' + escapeHtml(card.era) + ' · ' + escapeHtml(card.location) + '</p>' +
+      '</header>' +
+      '<div class="exhibit-layout">' +
+        '<section class="exhibit-showcase" aria-label="展品图片">' +
+          '<div class="pageflip-book" id="pageflip-book">' +
+            '<div class="flip-page front-page">' +
+              '<div class="object-frame">' + imageHTML + '</div>' +
+              '<div class="catalog-id">展柜编号 ' + escapeHtml(card.id) + '</div>' +
+            '</div>' +
+            '<div class="flip-page back-page">' +
+              '<p>' + escapeHtml(card.backText || '背面没有字，只留下了一点旧纸味。').replace(/\n/g, '<br>') + '</p>' +
+            '</div>' +
+          '</div>' +
+        '</section>' +
+        '<section class="exhibit-copy" aria-label="展品说明">' +
+          '<p class="item-desc">' + escapeHtml(desc) + '</p>' +
+          '<button class="primary-action flip-action" id="btn-flip-page" type="button">翻面发现秘密</button>' +
+        '</section>' +
+      '</div>' +
+      '<section class="story-panel" id="secret-panel" aria-label="翻面后的回忆故事">' +
+        '<h2>回忆故事</h2>' +
+        '<p>' + escapeHtml(card.moment || '').replace(/\n/g, '<br>') + '</p>' +
+      '</section>' +
+      '<details class="memory-fragments">' +
+        '<summary>回忆碎片</summary>' +
+        '<div>' + fragmentText + '</div>' +
+      '</details>' +
+      '<div class="archive-actions">' +
+        '<button class="quiet-action" id="card-back-shop" type="button">返回奶茶店</button>' +
+        '<button class="quiet-action" id="card-open-collection" type="button">打开失物招领柜</button>' +
+        '<button class="primary-action collect-action" id="btn-collect-card" type="button">收进失物招领柜</button>' +
+      '</div>' +
+      '<div class="clerk-toast" id="clerk-toast" role="dialog" aria-modal="true" aria-hidden="true">' +
+        '<div class="clerk-toast-card">' +
+          '<img src="assets/image/clerk/clerk-default.png" alt="店员">' +
+          '<div><strong>店员</strong><p>' + escapeHtml(card.clerkNote) + '</p></div>' +
+          '<button class="primary-action" id="btn-toast-done" type="button">收好了</button>' +
+        '</div>' +
+      '</div>' +
+    '</article>';
+
+  var flipped = false;
+  var pageFlip = null;
+  if (window.St && window.St.PageFlip) {
+    try {
+      pageFlip = new window.St.PageFlip(document.getElementById('pageflip-book'), {
+        width: 280,
+        height: 380,
+        size: 'stretch',
+        minWidth: 240,
+        maxWidth: 360,
+        minHeight: 320,
+        maxHeight: 440,
+        drawShadow: true,
+        flippingTime: 650,
+        usePortrait: true
+      });
+      pageFlip.loadFromHTML(document.querySelectorAll('.flip-page'));
+    } catch (err) {
+      pageFlip = null;
+    }
+  }
+  document.getElementById('btn-flip-page').addEventListener('click', function() {
+    flipped = !flipped;
+    document.getElementById('pageflip-book').classList.toggle('is-flipped', flipped);
+    document.getElementById('secret-panel').classList.toggle('visible', flipped);
+    this.textContent = flipped ? '翻回正面' : '翻面发现秘密';
+    if (pageFlip) pageFlip.flipNext();
+    triggerParticles();
+  });
+  document.getElementById('btn-collect-card').addEventListener('click', function() {
+    var toast = document.getElementById('clerk-toast');
+    toast.classList.add('visible');
+    toast.setAttribute('aria-hidden', 'false');
+    triggerParticles();
+  });
+  document.getElementById('btn-toast-done').addEventListener('click', function() {
+    saveToCollection(card.id);
+    var toast = document.getElementById('clerk-toast');
+    var collectBtn = document.getElementById('btn-collect-card');
+    toast.classList.remove('visible');
+    toast.setAttribute('aria-hidden', 'true');
+    collectBtn.textContent = '已收进柜子';
+    collectBtn.disabled = true;
+  });
+  document.getElementById('card-back-shop').addEventListener('click', initShop);
+  document.getElementById('card-open-collection').addEventListener('click', showCollection);
+  showPage('page-card');
+}
+
+function showCollection() {
+  var tabs = document.getElementById('collection-tabs');
+  tabs.innerHTML = '';
+  CATEGORIES.forEach(function(cat) {
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.textContent = cat;
+    btn.className = cat === state.collectionFilter ? 'active' : '';
+    btn.addEventListener('click', function() {
+      state.collectionFilter = cat;
+      showCollection();
+    });
+    tabs.appendChild(btn);
+  });
+  var collected = loadCollection();
+  var cards = Object.keys(CARDS).map(function(id) { return CARDS[id]; }).filter(function(card) {
+    return inferCategory(card) === state.collectionFilter;
+  });
+  var grid = document.getElementById('collection-grid');
+  grid.innerHTML = '';
+  cards.slice(0, 18).forEach(function(card) {
+    var isCollected = collected.indexOf(card.id) !== -1;
+    var tile = document.createElement('button');
+    tile.type = 'button';
+    tile.className = 'collection-tile' + (isCollected ? ' collected' : ' missing');
+    tile.innerHTML = '<span class="tile-id">' + card.id + '</span><strong>' + (isCollected ? escapeHtml(card.name) : '尚未收集') + '</strong><small>' + (isCollected ? escapeHtml(card.era) : '空格位') + '</small>';
+    if (isCollected) {
+      tile.addEventListener('click', function() {
+        state.revealedCard = card;
+        state.resultCard = card;
+        state.revealedCardImage = getCardImgPath(card.id);
+        showCard();
+      });
+    }
+    grid.appendChild(tile);
+  });
+  showPage('page-collection');
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  document.getElementById('clerk-container').addEventListener('click', function() {
+    if (hasReachedDailyLimit()) {
+      showSoldOutLine();
+    } else {
+      typeLine(document.getElementById('clerk-speech'), '「' + rand(CLERK_LINES.menu) + '」');
+    }
+    document.getElementById('home-drinks-grid').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
+  document.getElementById('menu-back').addEventListener('click', initShop);
+  document.getElementById('btn-confirm-yes').addEventListener('click', function() {
+    if (state.confirmMode === 'refreshConfirm') {
+      continueRefreshComment();
+      return;
+    }
+    if (state.confirmMode === 'refreshClerkComment') {
+      finishRefreshDrinks();
+      return;
+    }
+    document.getElementById('overlay-confirm').classList.remove('active');
+    document.getElementById('overlay-confirm').setAttribute('aria-hidden', 'true');
+    state.confirmMode = null;
+    state.currentStep = 'drinking';
+    enterDrinkingForSelectedMilkTea();
+  });
+  document.getElementById('btn-confirm-no').addEventListener('click', function() {
+    if (state.confirmMode === 'refreshConfirm') {
+      continueRefreshComment();
+      return;
+    }
+    if (state.confirmMode === 'refreshClerkComment') {
+      finishRefreshDrinks();
+      return;
+    }
+    document.getElementById('overlay-confirm').classList.remove('active');
+    document.getElementById('overlay-confirm').setAttribute('aria-hidden', 'true');
+    state.confirmMode = null;
+    state.selectedMilkTea = null;
+    state.selectedDrink = null;
+    state.resultCard = null;
+    state.revealedCard = null;
+    state.revealedCardImage = '';
+    state.currentStep = 'home';
+  });
+  document.getElementById('shake-button').addEventListener('click', drinkOneSip);
+  document.getElementById('btn-drink-found').addEventListener('click', showCard);
+  document.getElementById('btn-reveal-cta').addEventListener('click', showCard);
+  document.getElementById('btn-refresh-drinks').addEventListener('click', openRefreshConfirm);
+  document.getElementById('btn-collection').addEventListener('click', showCollection);
+  document.getElementById('collection-back').addEventListener('click', initShop);
+  document.getElementById('btn-easter').addEventListener('click', function() {
+    triggerParticles();
+    showPage('page-easter');
+  });
+  document.getElementById('xp-return').addEventListener('click', initShop);
+  document.getElementById('xp-close').addEventListener('click', initShop);
+  initShop();
+});
+</script>
+</body>
+</html>

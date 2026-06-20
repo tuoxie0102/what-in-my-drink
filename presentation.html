@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>不要老是喝奶茶：的奶茶店</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --paper: #f6efe4;
+    --ink: #33271d;
+    --ink-soft: #5e4e3c;
+    --muted: #8d7d68;
+    --stamp: #a74f3f;
+    --gold: #c4a35a;
+    --border: #c9b99d;
+    --warm-bg: #fff8ed;
+  }
+
+  body {
+    font-family: Georgia, "Noto Serif SC", "Source Han Serif SC", serif;
+    background: var(--paper);
+    color: var(--ink);
+    line-height: 2;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .screen {
+    display: none;
+    min-height: 100vh;
+    padding: 80px 32px 100px;
+  }
+  .screen.active { display: flex; align-items: center; justify-content: center; }
+  .screen-inner { width: min(640px, 100%); }
+
+  /* === Shared typography === */
+  .big-point {
+    font-size: 36px;
+    font-weight: normal;
+    line-height: 1.4;
+    letter-spacing: 0.5px;
+    margin-bottom: 40px;
+    color: var(--ink);
+  }
+  .section-head {
+    font-size: 13px;
+    color: var(--stamp);
+    font-family: "Courier New", monospace;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 24px;
+  }
+  .body-text {
+    font-size: 17px;
+    color: var(--ink-soft);
+    line-height: 2.2;
+  }
+  .body-text p { margin-bottom: 20px; }
+  .body-text p:last-child { margin-bottom: 0; }
+
+  /* === Screen 1: THE PROBLEM === */
+  .screen-1 { background: linear-gradient(180deg, #f6efe4 0%, #ece0ce 100%); }
+
+  /* === Screen 2: THE INSIGHT === */
+  .screen-2 { background: linear-gradient(180deg, #ece0ce 0%, #f6efe4 100%); }
+  .trigger-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 28px 0;
+  }
+  .trigger-tag {
+    padding: 6px 16px;
+    background: #fff8ed;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    font-size: 14px;
+    color: var(--ink-soft);
+    font-family: "Courier New", monospace;
+  }
+
+  /* === Screen 3: THE IDEA === */
+  .screen-3 { background: var(--paper); }
+  .mapping {
+    margin: 32px 0;
+  }
+  .mapping-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 0;
+    border-bottom: 1px dotted var(--border);
+  }
+  .mapping-row:last-child { border: none; }
+  .map-from {
+    font-size: 15px;
+    color: var(--ink-soft);
+    width: 160px;
+    flex-shrink: 0;
+  }
+  .map-arrow {
+    color: var(--gold);
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .map-to {
+    font-size: 15px;
+    color: var(--ink);
+    font-weight: bold;
+  }
+
+  /* === Screen 4: THE FLOW === */
+  .screen-4 { background: linear-gradient(180deg, #f6efe4 0%, #ece0ce 100%); }
+  .flow-steps { margin: 24px 0; }
+  .flow-row {
+    display: flex;
+    align-items: center;
+    padding: 10px 0;
+    gap: 14px;
+  }
+  .flow-num {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: #e8d5be;
+    color: var(--ink-soft);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    flex-shrink: 0;
+    font-family: "Courier New", monospace;
+  }
+  .flow-text { font-size: 17px; color: var(--ink-soft); }
+  .flow-arrow-row { padding: 2px 0 2px 50px; color: var(--muted); font-size: 14px; }
+
+  /* === Screen 5: THE DEMO === */
+  .screen-5 {
+    background: linear-gradient(180deg, #ece0ce 0%, #f6efe4 100%);
+    text-align: center;
+  }
+  .cta-btn {
+    display: inline-block;
+    margin-top: 36px;
+    padding: 16px 48px;
+    background: var(--gold);
+    color: #fff;
+    border: none;
+    border-radius: 3px;
+    font-family: "Courier New", monospace;
+    font-size: 17px;
+    letter-spacing: 2px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.2s;
+  }
+  .cta-btn:hover { background: #b3934a; }
+
+  .credit {
+    margin-top: 56px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+    font-size: 13px;
+    color: var(--muted);
+    text-align: left;
+    line-height: 2;
+  }
+
+  /* === Nav === */
+  .nav-bar {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: rgba(246, 239, 228, 0.94);
+    border-top: 1px solid var(--border);
+    padding: 10px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 100;
+    backdrop-filter: blur(6px);
+  }
+  .nav-dots { display: flex; gap: 6px; }
+  .nav-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #d4c8b0; cursor: pointer;
+    transition: background 0.3s;
+  }
+  .nav-dot.active { background: var(--stamp); }
+  .nav-btn {
+    padding: 6px 18px;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    background: transparent;
+    color: var(--ink-soft);
+    font-family: "Courier New", monospace;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 1px;
+  }
+  .nav-btn:hover { color: var(--ink); border-color: var(--ink-soft); }
+  .nav-btn:disabled { opacity: 0.3; cursor: default; }
+  .key-hint {
+    position: fixed; top: 14px; right: 18px;
+    font-size: 10px; color: var(--muted);
+    font-family: "Courier New", monospace; opacity: 0.6; z-index: 99;
+  }
+
+  @media (max-width: 600px) {
+    .screen { padding: 50px 18px 110px; }
+    .big-point { font-size: 26px; }
+    .mapping-row { flex-wrap: wrap; }
+    .map-from { width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<div class="key-hint">← → 翻页 · 共 5 屏</div>
+
+<!-- ====== SCREEN 1: WHY ====== -->
+<section class="screen active" id="screen-1">
+  <div class="screen-inner">
+    <div class="section-head">核心动机</div>
+    <h1 class="big-point">我想念我的奶奶。<br>但我不是在一个隆重的时刻想起她。</h1>
+    <div class="body-text">
+      <p>是在看到一件旧物的时候。<br>是在闻到一种味道的时候。<br>是路过一个已经不存在的地方的时候。</p>
+      <p>记忆不是被"回忆"起来的。<br>是被一个很小、很具体的瞬间<strong>触发</strong>的。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ====== SCREEN 2: WHAT TRIGGERS ====== -->
+<section class="screen" id="screen-2">
+  <div class="screen-inner">
+    <div class="section-head">触发记忆的，不是大事件</div>
+    <h1 class="big-point">是一张车票。<br>一包辣条。<br>一个已经下线的QQ宠物。</h1>
+    <div class="body-text">
+      <p>我开始收集这些"触发物"。</p>
+      <p>不是严肃的档案——<br>而是一些普通人生活中<strong>不小心留下来的东西</strong>。</p>
+    </div>
+    <div class="trigger-list">
+      <span class="trigger-tag">校服照片</span>
+      <span class="trigger-tag">游戏点卡</span>
+      <span class="trigger-tag">MP3</span>
+      <span class="trigger-tag">火车票</span>
+      <span class="trigger-tag">暂住证</span>
+      <span class="trigger-tag">QQ头像截图</span>
+      <span class="trigger-tag">倒计时页</span>
+      <span class="trigger-tag">手写收据</span>
+    </div>
+  </div>
+</section>
+
+<!-- ====== SCREEN 3: HOW IT WORKS ====== -->
+<section class="screen" id="screen-3">
+  <div class="screen-inner">
+    <div class="section-head">核心理念</div>
+    <h1 class="big-point">我把自己的三个特点，<br>变成了一间奶茶店。</h1>
+    <div class="mapping">
+      <div class="mapping-row">
+        <span class="map-from">喜欢喝奶茶</span>
+        <span class="map-arrow">→</span>
+        <span class="map-to">奶茶店入口</span>
+      </div>
+      <div class="mapping-row">
+        <span class="map-from">对旧物有执念</span>
+        <span class="map-arrow">→</span>
+        <span class="map-to">杯底藏着别人的遗失物</span>
+      </div>
+      <div class="mapping-row">
+        <span class="map-from">很怀旧</span>
+        <span class="map-arrow">→</span>
+        <span class="map-to">每件物品背后有一段记忆</span>
+      </div>
+    </div>
+    <div class="body-text">
+      <p>用户不是来阅读记忆的。<br>是先点一杯奶茶，喝到底，<br>在杯底<strong>发现</strong>一个奇怪的东西。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ====== SCREEN 4: THE EXPERIENCE ====== -->
+<section class="screen" id="screen-4">
+  <div class="screen-inner">
+    <div class="section-head">用户体验</div>
+    <h1 class="big-point">你走进奶茶店。<br>店员说："不好意思，加多东西了。"</h1>
+    <div class="flow-steps">
+      <div class="flow-row">
+        <span class="flow-num">1</span>
+        <span class="flow-text">每天只能选三杯奶茶</span>
+      </div>
+      <div class="flow-arrow-row">↓</div>
+      <div class="flow-row">
+        <span class="flow-num">2</span>
+        <span class="flow-text">一口一口喝下去</span>
+      </div>
+      <div class="flow-arrow-row">↓</div>
+      <div class="flow-row">
+        <span class="flow-num">3</span>
+        <span class="flow-text">杯底掉出一个奇怪物件</span>
+      </div>
+      <div class="flow-arrow-row">↓</div>
+      <div class="flow-row">
+        <span class="flow-num">4</span>
+        <span class="flow-text">翻开物件，读到一段别人的记忆</span>
+      </div>
+      <div class="flow-arrow-row">↓</div>
+      <div class="flow-row">
+        <span class="flow-num">5</span>
+        <span class="flow-text">收进失物招领柜，像保存一小段时代</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====== SCREEN 5: THE DEMO ====== -->
+<section class="screen" id="screen-5">
+  <div class="screen-inner">
+    <div class="section-head">Demo</div>
+    <h1 class="big-point">如果记忆不是被写进档案，<br>而是被<strong>喝出来</strong>的，<br>我们会不会更愿意靠近它？</h1>
+    <a class="cta-btn" href="index.html">进入 Demo</a>
+    <div class="credit">
+      <strong>江皑莹</strong> — 高校教师、编剧、纪录片导演。<br>
+      喜欢喝奶茶。有恋物癖。很怀旧。<br>
+      项目：《不要老是喝奶茶：的奶茶店》<br>
+      （注意：有冒号，有"的奶茶店"）
+    </div>
+  </div>
+</section>
+
+<!-- Nav -->
+<nav class="nav-bar">
+  <button class="nav-btn" id="btn-prev" disabled>←</button>
+  <div class="nav-dots" id="nav-dots"></div>
+  <button class="nav-btn" id="btn-next">→</button>
+</nav>
+
+<script>
+(function() {
+  var screens = document.querySelectorAll('.screen');
+  var total = screens.length;
+  var current = 0;
+
+  var dotsContainer = document.getElementById('nav-dots');
+  for (var i = 0; i < total; i++) {
+    var dot = document.createElement('span');
+    dot.className = 'nav-dot' + (i === 0 ? ' active' : '');
+    dot.setAttribute('data-index', i);
+    dot.addEventListener('click', function() {
+      goTo(parseInt(this.getAttribute('data-index')));
+    });
+    dotsContainer.appendChild(dot);
+  }
+
+  function goTo(index) {
+    if (index < 0 || index >= total) return;
+    screens[current].classList.remove('active');
+    screens[index].classList.add('active');
+    document.querySelectorAll('.nav-dot').forEach(function(d, i) {
+      d.classList.toggle('active', i === index);
+    });
+    current = index;
+    document.getElementById('btn-prev').disabled = (current === 0);
+    document.getElementById('btn-next').disabled = (current === total - 1);
+    window.scrollTo(0, 0);
+  }
+
+  document.getElementById('btn-prev').addEventListener('click', function() { goTo(current - 1); });
+  document.getElementById('btn-next').addEventListener('click', function() { goTo(current + 1); });
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') {
+      e.preventDefault(); goTo(current + 1);
+    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+      e.preventDefault(); goTo(current - 1);
+    }
+  });
+})();
+</script>
+
+</body>
+</html>

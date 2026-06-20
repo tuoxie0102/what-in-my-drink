@@ -1,0 +1,16 @@
+{
+  "name": "dont-drink-milk-tea-every-day",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Pixel milk tea shop, lost-object museum, and millennial memoir interactive archive.",
+  "scripts": {
+    "start": "npx serve .",
+    "check": "node -e \"console.log('static html project')\""
+  },
+  "dependencies": {
+    "@tsparticles/react": "^3.0.0",
+    "framer-motion": "^12.0.0",
+    "page-flip": "^2.0.7",
+    "xp.css": "^0.2.3"
+  }
+}
