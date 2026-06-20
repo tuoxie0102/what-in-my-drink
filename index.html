@@ -247,6 +247,13 @@ function loadCollection() {
   catch (err) { return []; }
 }
 
+function pickUncollectedCard(cardPool) {
+  var collected = loadCollection();
+  var available = cardPool.filter(function(cid) { return collected.indexOf(cid) === -1; });
+  if (available.length > 0) return rand(available);
+  return rand(cardPool);
+}
+
 function saveToCollection(cardId) {
   var ids = loadCollection();
   if (ids.indexOf(cardId) === -1) {
@@ -475,7 +482,7 @@ function enterDrinkingForSelectedMilkTea() {
   }
   recordPurchase(state.selectedMilkTea.drinkKey);
   var drink = DRINKS[state.selectedMilkTea.drinkKey];
-  var cardId = rand(drink.cards);
+  var cardId = pickUncollectedCard(drink.cards);
   state.resultCard = CARDS[cardId] || CARDS['#001'];
   state.revealedCard = state.resultCard;
   state.revealedCardImage = getCardImgPath(state.revealedCard.id);
@@ -572,7 +579,7 @@ function finishShake() {
     return;
   }
   var drink = DRINKS[state.selectedMilkTea.drinkKey];
-  var cardId = rand(drink.cards);
+  var cardId = pickUncollectedCard(drink.cards);
   state.resultCard = CARDS[cardId] || CARDS['#001'];
   state.revealedCard = state.resultCard;
   state.revealedCardImage = getCardImgPath(state.revealedCard.id);
